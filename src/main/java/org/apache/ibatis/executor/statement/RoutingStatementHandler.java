@@ -43,6 +43,7 @@ public class RoutingStatementHandler implements StatementHandler {
         delegate = new SimpleStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
         break;
       case PREPARED:
+        //最常用的
         delegate = new PreparedStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
         break;
       case CALLABLE:

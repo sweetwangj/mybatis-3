@@ -31,12 +31,27 @@ import org.apache.ibatis.session.Configuration;
  * <p>
  * Can also have additional parameters that are created by the dynamic language (for loops, bind...).
  *
+ * 建立Sql和参数的地方，三个常用的属性
  * @author Clinton Begin
  */
 public class BoundSql {
-
+  /**
+   * 就是我们写在映射器里的一条sql
+   */
   private final String sql;
+  /**
+   * ParameterMapping集合
+   */
   private final List<ParameterMapping> parameterMappings;
+  /**
+   * 参数本身 可以传递简单对象，POJO ，Map，@Param注解多种形式的参数
+   * 1.传递简单对象（int String，float，double等）会把参数转换为其对应的包装类，例如int 会转换为 Integer
+   * 2.传递对象POJO 或者Map 时，这个parameterObject就是传递参数的本身
+   * 3.当传递多个参数，并且没有使用@Param 注解时，mybatis会把参数转化为Map<String,Object>类型的，键值的关系是按照顺序来规划的
+   * 类似的形式{“1”:p1,"2":p2,"3":p3,....,"param1":p1,"param2":p2,"param3":p3,...} 所以此时可以通过 #{param1} 或者#{1} 去引用第一个参数
+   * 4.多参数，用@Param注解 @Param("key1") String p1,@Param("key2") String p2,@Param("key3") String p3 会把数字键值替换为@Param注解中的值
+   * {“key1”:p1,"key2":p2,"key3":p3,....,"param1":p1,"param2":p2,"param3":p3,...}
+   */
   private final Object parameterObject;
   private final Map<String, Object> additionalParameters;
   private final MetaObject metaParameters;

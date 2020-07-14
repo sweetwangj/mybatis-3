@@ -23,11 +23,14 @@ import java.util.List;
  * @author Clinton Begin
  */
 public class InterceptorChain {
-
+  /**
+   * 保存完成初始化的插件
+   */
   private final List<Interceptor> interceptors = new ArrayList<>();
 
   public Object pluginAll(Object target) {
     for (Interceptor interceptor : interceptors) {
+      //为目标对象生成代理对象，如果有多个拦截器就生成多个代理对象
       target = interceptor.plugin(target);
     }
     return target;

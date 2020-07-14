@@ -107,6 +107,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);
       typeAliasesElement(root.evalNode("typeAliases"));
+      //解析插件
       pluginElement(root.evalNode("plugins"));
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
@@ -183,10 +184,15 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void pluginElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //读取插件标签属性
         String interceptor = child.getStringAttribute("interceptor");
+        //读取属性
         Properties properties = child.getChildrenAsProperties();
+        //实例化--反射技术生成插件实例
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
+        //设置我们配置的参数
         interceptorInstance.setProperties(properties);
+        //将插件实例保存到配置对象中
         configuration.addInterceptor(interceptorInstance);
       }
     }

@@ -29,6 +29,8 @@ import org.apache.ibatis.scripting.LanguageDriver;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * 保存映射器的一个节点
+ * 包括 sql  sql的id，缓存信息 resultMap parameterType resultType languageDriver 等重要的配置
  * @author Clinton Begin
  */
 public final class MappedStatement {

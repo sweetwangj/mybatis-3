@@ -23,6 +23,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * 描述参数 实现参数与sql的结合
  * @author Clinton Begin
  */
 public class ParameterMapping {

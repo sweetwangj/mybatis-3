@@ -63,6 +63,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * 默认情况都是这个类进行结果处理，实现比较复杂，涉及到了JAVASSIST或者CGLIB实现延迟加载，然后通过typeHandler 和 objectFactory 进行组装结果再返回
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Iwao AVE!
@@ -176,6 +177,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   //
   // HANDLE RESULT SETS
+  // DefaultResultSetHandler类（封装返回值，将查询结果封装成Object对象）
   //
   @Override
   public List<Object> handleResultSets(Statement stmt) throws SQLException {
@@ -184,6 +186,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     final List<Object> multipleResults = new ArrayList<>();
 
     int resultSetCount = 0;
+    //ResultSetWrapper是ResultSet的包装类
+    //调用getFirstResultSet方法获取第一个ResultSet，同时获取数据库的MetaData数据，
+    // 包括数据表列名、列的类型、类序号等，这些信息都存储在ResultSetWrapper类中了
     ResultSetWrapper rsw = getFirstResultSet(stmt);
 
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();
@@ -191,6 +196,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     validateResultMapsCount(rsw, resultMapCount);
     while (rsw != null && resultMapCount > resultSetCount) {
       ResultMap resultMap = resultMaps.get(resultSetCount);
+      //DefaultResultSetHandler类---handleResultSet方法来来进行结果集的封装
       handleResultSet(rsw, resultMap, multipleResults, null);
       rsw = getNextResultSet(stmt);
       cleanUpAfterHandlingResultSet();
@@ -298,6 +304,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       } else {
         if (resultHandler == null) {
           DefaultResultHandler defaultResultHandler = new DefaultResultHandler(objectFactory);
+          //handleRowValues方法来进行值的设置：
           handleRowValues(rsw, resultMap, defaultResultHandler, rowBounds, null);
           multipleResults.add(defaultResultHandler.getResultList());
         } else {
@@ -325,6 +332,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       checkResultHandler();
       handleRowValuesForNestedResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
     } else {
+      //封装数据
       handleRowValuesForSimpleResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
     }
   }
@@ -351,6 +359,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     skipRows(resultSet, rowBounds);
     while (shouldProcessMoreRows(resultContext, rowBounds) && !resultSet.isClosed() && resultSet.next()) {
       ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(resultSet, resultMap, null);
+      //
       Object rowValue = getRowValue(rsw, discriminatedResultMap, null);
       storeObject(resultHandler, resultContext, rowValue, parentMapping, resultSet);
     }
@@ -394,11 +403,13 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
+    //createResultObject为新创建的对象，数据表对应的类
     Object rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
     if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
       final MetaObject metaObject = configuration.newMetaObject(rowValue);
       boolean foundValues = this.useConstructorMappings;
       if (shouldApplyAutomaticMappings(resultMap, false)) {
+        //// 这里把数据填充进去，metaObject中包含了resultObject信息
         foundValues = applyAutomaticMappings(rsw, resultMap, metaObject, columnPrefix) || foundValues;
       }
       foundValues = applyPropertyMappings(rsw, resultMap, metaObject, lazyLoader, columnPrefix) || foundValues;
@@ -512,18 +523,27 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
     return autoMapping;
   }
-
+//把ResultSet中查询结果填充到JavaBean中
   private boolean applyAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
     List<UnMappedColumnAutoMapping> autoMapping = createAutomaticMappings(rsw, resultMap, metaObject, columnPrefix);
     boolean foundValues = false;
     if (!autoMapping.isEmpty()) {
+      // // 这里进行for循环调用，因为user表中总共有7项，所以也就调用7次
       for (UnMappedColumnAutoMapping mapping : autoMapping) {
+
+        // mapping.typeHandler.getResult会获取查询结果值的实际类型，
+        // 比如我们user表中id字段为int类型，那么它就对应Java中的Integer类型，
+        // 然后通过调用statement.getInt("id")来获取其int值，其类型为Integer。
+        // metaObject.setValue方法会把获取到的Integer值设置到Java类中的对应字段。
         final Object value = mapping.typeHandler.getResult(rsw.getResultSet(), mapping.column);
+
         if (value != null) {
           foundValues = true;
         }
         if (value != null || (configuration.isCallSettersOnNulls() && !mapping.primitive)) {
           // gcode issue #377, call setter on nulls (value is not 'found')
+          //metaValue.setValue方法最后会调用到Java类中对应数据域的set方法，
+          // 这样也就完成了SQL查询结果集的Java类封装过程。
           metaObject.setValue(mapping.property, value);
         }
       }

@@ -28,6 +28,7 @@ import org.apache.ibatis.reflection.wrapper.ObjectWrapper;
 import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
 
 /**
+ * 读取或者修改对象的属性
  * @author Clinton Begin
  */
 public class MetaObject {
@@ -57,6 +58,14 @@ public class MetaObject {
     }
   }
 
+  /**
+   * 用于包装对象
+   * @param object
+   * @param objectFactory
+   * @param objectWrapperFactory
+   * @param reflectorFactory
+   * @return
+   */
   public static MetaObject forObject(Object object, ObjectFactory objectFactory, ObjectWrapperFactory objectWrapperFactory, ReflectorFactory reflectorFactory) {
     if (object == null) {
       return SystemMetaObject.NULL_META_OBJECT;
@@ -109,6 +118,11 @@ public class MetaObject {
     return objectWrapper.hasGetter(name);
   }
 
+  /**
+   * 获取对象属性值--支持OGNL
+   * @param name
+   * @return
+   */
   public Object getValue(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -123,6 +137,11 @@ public class MetaObject {
     }
   }
 
+  /**
+   * 用于修改属性值--支持OGNL
+   * @param name
+   * @param value
+   */
   public void setValue(String name, Object value) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {

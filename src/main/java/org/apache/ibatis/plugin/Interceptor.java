@@ -18,16 +18,31 @@ package org.apache.ibatis.plugin;
 import java.util.Properties;
 
 /**
+ * 插件的核心类  模板方法模式
  * @author Clinton Begin
  */
 public interface Interceptor {
-
+  /**
+   * 覆盖所拦截对象的原有的方法
+   * @param invocation
+   * @return
+   * @throws Throwable
+   */
   Object intercept(Invocation invocation) throws Throwable;
 
+  /**
+   * target 对象 是被拦截对象，它的作用是给被拦截对象生成一个代理对象
+   * @param target
+   * @return
+   */
   default Object plugin(Object target) {
     return Plugin.wrap(target, this);
   }
 
+  /**
+   * 在插件元素中配置所需的参数
+   * @param properties
+   */
   default void setProperties(Properties properties) {
     // NOP
   }
